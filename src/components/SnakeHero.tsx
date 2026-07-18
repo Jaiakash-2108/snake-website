@@ -51,9 +51,9 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
       style={{ backgroundColor }}
     >
       {/* 1. Header Navigation (Not Sticky) */}
-      <nav className="relative z-20 w-full max-w-7xl mx-auto px-6 md:px-12 py-8 flex items-center justify-between pointer-events-auto">
+      <nav className="relative z-20 w-full px-6 md:px-12 py-8 flex items-center justify-between pointer-events-auto">
         {/* Logo */}
-        <div className="flex items-center gap-3 select-none pl-2 sm:pl-4 md:pl-8 lg:pl-12">
+        <div className="flex items-center gap-3 select-none">
           <svg 
             viewBox="0 0 100 100" 
             className="w-10 h-10 fill-current"
@@ -75,7 +75,7 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
 
         {/* Explore outline button */}
         <button 
-          className={`px-7 py-2.5 rounded-full border border-current text-xs font-sans font-semibold tracking-wider hover:bg-neutral-900 hover:text-white transition-all duration-300 flex items-center gap-2 cursor-pointer mr-2 sm:mr-4 md:mr-8 lg:mr-12`}
+          className={`px-7 py-2.5 rounded-full border border-current text-xs font-sans font-semibold tracking-wider hover:bg-neutral-900 hover:text-white transition-all duration-300 flex items-center gap-2 cursor-pointer`}
         >
           Explore <span className="text-[14px]">→</span>
         </button>
@@ -108,12 +108,12 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
           <div className="w-14 h-[1px] bg-current opacity-30 mb-8" />
 
           {/* Description */}
-          <p className="font-sans font-light text-sm sm:text-base leading-relaxed mb-8 opacity-90 max-w-[480px]">
+          <p className="font-sans font-light text-sm sm:text-base leading-relaxed mb-10 opacity-90 max-w-[480px]">
             {description}
           </p>
 
           {/* Metadata Row */}
-          <div className="flex items-center flex-nowrap gap-x-6 sm:gap-x-8 mb-6 select-none w-full max-w-lg lg:max-w-xl">
+          <div className="flex items-center flex-nowrap gap-x-6 sm:gap-x-8 mb-10 select-none w-full max-w-lg lg:max-w-xl">
             {metadata.map((item, idx) => (
               <React.Fragment key={idx}>
                 {idx > 0 && (

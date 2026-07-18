@@ -90,7 +90,7 @@ export default function Page() {
     for (let i = 1; i <= TOTAL_FRAMES; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
-      img.src = `/ezgif-76043ac373ec0fe4-jpg/ezgif-frame-${paddedIndex}.jpg`;
+      img.src = `/Reticulated-python-1/ezgif-frame-${paddedIndex}.jpg`;
 
       img.onload = () => {
         if (typeof img.decode === "function") {

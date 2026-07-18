@@ -1,103 +1,240 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useScroll, useSpring, useMotionValueEvent } from "framer-motion";
+import { MapPin, Shield, Ruler } from "lucide-react";
+import SnakeHero, { MetadataItem } from "@/components/SnakeHero";
+
+const TOTAL_FRAMES = 82;
+
+export default function Page() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const lastRenderedIndexRef = useRef<number>(-1);
+  const animationFrameIdRef = useRef<number | null>(null);
+
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Scroll Progress Tracking over the 200vh container height
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"],
+  });
+
+  // Spring physics interpolation (damping: 32, stiffness: 180 for deliberate Apple-style response)
+  const smoothProgress = useSpring(scrollYProgress, {
+    damping: 32,
+    stiffness: 180,
+    mass: 0.12,
+    restDelta: 0.0001,
+  });
+
+  // Frame Draw logic with high performance subpixel canvas scaling
+  const drawImage = useCallback((index: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = imagesRef.current[index];
+    if (!img || !img.complete) return;
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const imgWidth = img.width;
+    const imgHeight = img.height;
+
+    const imgRatio = imgWidth / imgHeight;
+    const canvasRatio = canvasWidth / canvasHeight;
+
+    let drawWidth = canvasWidth;
+    let drawHeight = canvasHeight;
+    let drawX = 0;
+    let drawY = 0;
+
+    // Scale aspect-fill
+    if (canvasRatio > imgRatio) {
+      drawWidth = canvasWidth;
+      drawHeight = canvasWidth / imgRatio;
+      drawY = (canvasHeight - drawHeight) / 2;
+    } else {
+      drawHeight = canvasHeight;
+      drawWidth = canvasHeight * imgRatio;
+      drawX = (canvasWidth - drawWidth) / 2;
+    }
+
+    // Anchor visual alignment to the right of the screen (matching layout composition)
+    if (drawWidth > canvasWidth) {
+      drawX = canvasWidth - drawWidth;
+    }
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(
+      img, 
+      Math.round(drawX), 
+      Math.round(drawY), 
+      Math.round(drawWidth), 
+      Math.round(drawHeight)
+    );
+  }, []);
+
+  // Preload all 82 frame assets
+  useEffect(() => {
+    let loadedCount = 0;
+    const preloadedImages: HTMLImageElement[] = [];
+
+    for (let i = 1; i <= TOTAL_FRAMES; i++) {
+      const img = new Image();
+      const paddedIndex = String(i).padStart(3, '0');
+      img.src = `/ezgif-76043ac373ec0fe4-jpg/ezgif-frame-${paddedIndex}.jpg`;
+
+      img.onload = () => {
+        if (typeof img.decode === "function") {
+          img.decode()
+            .then(() => {
+              loadedCount++;
+              setImagesLoaded(loadedCount);
+              if (loadedCount === TOTAL_FRAMES) {
+                setTimeout(() => setLoading(false), 450);
+              }
+            })
+            .catch(() => {
+              loadedCount++;
+              setImagesLoaded(loadedCount);
+              if (loadedCount === TOTAL_FRAMES) {
+                setTimeout(() => setLoading(false), 450);
+              }
+            });
+        } else {
+          loadedCount++;
+          setImagesLoaded(loadedCount);
+          if (loadedCount === TOTAL_FRAMES) {
+            setTimeout(() => setLoading(false), 450);
+          }
+        }
+      };
+
+      img.onerror = () => {
+        loadedCount++;
+        setImagesLoaded(loadedCount);
+        if (loadedCount === TOTAL_FRAMES) {
+          setTimeout(() => setLoading(false), 450);
+        }
+      };
+
+      preloadedImages.push(img);
+    }
+    imagesRef.current = preloadedImages;
+  }, []);
+
+  // Handle canvas resize and draw immediately
+  useEffect(() => {
+    if (loading) return;
+
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+
+      const frameIndex = Math.max(0, Math.min(TOTAL_FRAMES - 1, Math.floor(smoothProgress.get() * TOTAL_FRAMES)));
+      lastRenderedIndexRef.current = frameIndex;
+      drawImage(frameIndex);
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [loading, drawImage, smoothProgress]);
+
+  // Sync canvas drawing on scroll progress updates using requestAnimationFrame (60 FPS)
+  useMotionValueEvent(smoothProgress, "change", (latest) => {
+    const frameIndex = Math.max(0, Math.min(TOTAL_FRAMES - 1, Math.floor(latest * TOTAL_FRAMES)));
+    
+    if (frameIndex !== lastRenderedIndexRef.current) {
+      lastRenderedIndexRef.current = frameIndex;
+
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+
+      animationFrameIdRef.current = requestAnimationFrame(() => {
+        drawImage(frameIndex);
+      });
+    }
+  });
+
+  const loadingPercentage = Math.round((imagesLoaded / TOTAL_FRAMES) * 100);
+
+  // Metadata specifications
+  const metadata: MetadataItem[] = [
+    {
+      label: "VENOM",
+      value: "Non-venomous",
+      icon: (
+        <svg viewBox="0 0 100 100" className="w-5 h-5 fill-current">
+          <path d="M50,15 C40,25 32,38 32,52 C32,65 40,75 50,75 C60,75 68,65 68,52 C68,38 60,25 50,15 Z" />
+        </svg>
+      )
+    },
+    {
+      label: "SIZE",
+      value: "Up to 6.5 m",
+      icon: <Ruler className="w-5 h-5" />
+    },
+    {
+      label: "STATUS",
+      value: "Least Concern",
+      icon: <Shield className="w-5 h-5" />
+    }
+  ];
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <main>
+      {/* Cinematic Loader Screen */}
+      <div className={`preloader ${!loading ? "fade-out" : ""}`}>
+        <div className="loader-container">
+          <span className="loader-brand">Preloading Atlas</span>
+          <span className="loader-progress-text">
+            {String(loadingPercentage).padStart(3, "0")}%
+          </span>
+          <div className="loader-bar-outer">
+            <div 
+              className="loader-bar-inner" 
+              style={{ width: `${loadingPercentage}%` }} 
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+
+      {/* Film Grain Texture Overlay */}
+      <div className="noise-overlay" />
+
+      {/* Interactive Scroll Arena */}
+      <div ref={containerRef} className="scroll-container">
+        <div className="sticky-viewport">
+          <SnakeHero
+            eyebrow="Native to Southeast Asia"
+            eyebrowIcon={<MapPin className="w-4 h-4" />}
+            title="RETICULATED PYTHON"
+            description="The world's longest snake, capable of exceeding 6 meters. A master of camouflage and ambush, moving silently through the rainforests."
+            metadata={metadata}
+            ctaText="Discover this species"
+            backgroundColor="#ebb11c"
+            textColor="text-neutral-950"
+            canvasRef={canvasRef}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        </div>
+      </div>
+    </main>
   );
 }

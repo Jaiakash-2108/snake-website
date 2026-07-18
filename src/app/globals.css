@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-serif: var(--font-serif-display), Georgia, serif;
-  --font-sans: var(--font-sans-display), system-ui, sans-serif;
+  --font-serif: var(--font-serif-display);
+  --font-sans: var(--font-sans-display);
 }
 
 /* Base resets & hidden scrollbars for full screen presentation */

@@ -71,6 +71,7 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
       <canvas 
         ref={canvasRef} 
         className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none animation-canvas" 
+        style={{ filter: "contrast(1.15) brightness(1.05) saturate(1.12)" }}
       />
 
       {/* 3. Content overlay container (z-10) */}

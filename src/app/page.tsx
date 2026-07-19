@@ -6,7 +6,7 @@ import { MapPin, Shield, Ruler } from "lucide-react";
 import SnakeHero, { MetadataItem } from "@/components/SnakeHero";
 
 const TOTAL_FRAMES_1 = 82;
-const TOTAL_FRAMES_2 = 57;
+const TOTAL_FRAMES_2 = 118;
 const COMBINED_FRAMES = TOTAL_FRAMES_1 + TOTAL_FRAMES_2;
 
 export default function Page() {
@@ -107,8 +107,7 @@ export default function Page() {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     
-    // Apply visual quality enhancement filters (increases clarity, contrast, and premium texture)
-    ctx.filter = "contrast(1.15) brightness(1.05) saturate(1.12)";
+
 
     ctx.drawImage(
       img, 
@@ -118,19 +117,30 @@ export default function Page() {
       Math.round(drawHeight)
     );
 
-    // If this is Chapter 2 (Green Tree Python), mask out the Gemini logo watermark in the bottom-right corner
-    if (imagesList === images2Ref.current) {
-      ctx.fillStyle = "#000000";
-      // The watermark sits in the bottom-right corner. We cover the bottom-right 12% width and 12% height of the image.
-      const maskWidth = drawWidth * 0.12;
-      const maskHeight = drawHeight * 0.12;
-      const maskX = drawX + drawWidth - maskWidth;
-      const maskY = drawY + drawHeight - maskHeight;
-      ctx.fillRect(
-        Math.round(maskX), 
-        Math.round(maskY), 
-        Math.round(maskWidth), 
-        Math.round(maskHeight)
+    // If this is Chapter 2 (Green Tree Python), dynamically clone-stamp the background to hide the Gemini watermark
+    if (canvasRef === canvasRef2) {
+      // Calculate absolute patch dimensions relative to image scale
+      const patchW = Math.round(drawWidth * 0.08);
+      const patchH = Math.round(drawHeight * 0.08);
+      
+      // Source patch is shifted left (safe clean space at the same height below the branch)
+      const srcX = Math.round(drawX + drawWidth - patchW * 2.5);
+      const srcY = Math.round(drawY + drawHeight - patchH - 10);
+      
+      // Destination patch covers the bottom-right watermark
+      const destX = Math.round(drawX + drawWidth - patchW - 10);
+      const destY = Math.round(drawY + drawHeight - patchH - 10);
+      
+      ctx.drawImage(
+        canvas, 
+        srcX, 
+        srcY, 
+        patchW, 
+        patchH, 
+        destX, 
+        destY, 
+        patchW, 
+        patchH
       );
     }
   }, []);
@@ -170,7 +180,7 @@ export default function Page() {
     for (let i = 1; i <= TOTAL_FRAMES_2; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
-      img.src = `/ezgif-4ccedce150d00c07-jpg/ezgif-frame-${paddedIndex}.jpg`;
+      img.src = `/snake22/ezgif-frame-${paddedIndex}.png`;
       img.onload = () => {
         if (typeof img.decode === "function") {
           img.decode().then(triggerAssetLoaded).catch(triggerAssetLoaded);
@@ -381,7 +391,7 @@ export default function Page() {
               description="A vibrant arboreal snake known for its brilliant emerald coloration and exceptional camouflage among rainforest canopies."
               metadata={metadata2}
               ctaText="Discover Species"
-              backgroundColor="#050505"
+              backgroundColor="#030303"
               textColor="text-white"
               canvasRef={canvasRef2}
             />

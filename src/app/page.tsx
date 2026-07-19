@@ -157,66 +157,64 @@ export default function Page() {
 
   // Preload all assets for all chapters
   useEffect(() => {
-    let loadedCount = 0;
+    let chapter1Loaded = 0;
     const temp1: HTMLImageElement[] = [];
     const temp2: HTMLImageElement[] = [];
     const temp3: HTMLImageElement[] = [];
 
-    const triggerAssetLoaded = () => {
-      loadedCount++;
-      setImagesLoaded(loadedCount);
-      if (loadedCount === COMBINED_FRAMES) {
+    const triggerChapter1Loaded = () => {
+      chapter1Loaded++;
+      setImagesLoaded(chapter1Loaded);
+      if (chapter1Loaded === TOTAL_FRAMES_1) {
         setTimeout(() => setLoading(false), 450);
       }
     };
 
-    // Preload Reticulated Python sequence
+    const triggerSilentLoad = () => {};
+
+    // Preload Reticulated Python sequence (Blocking)
     for (let i = 1; i <= TOTAL_FRAMES_1; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
       img.src = `/Reticulated-python-1/ezgif-frame-${paddedIndex}.jpg`;
       img.onload = () => {
         if (typeof img.decode === "function") {
-          img.decode().then(triggerAssetLoaded).catch(triggerAssetLoaded);
+          img.decode().then(triggerChapter1Loaded).catch(triggerChapter1Loaded);
         } else {
-          triggerAssetLoaded();
+          triggerChapter1Loaded();
         }
       };
-      img.onerror = triggerAssetLoaded;
+      img.onerror = triggerChapter1Loaded;
       temp1.push(img);
     }
     images1Ref.current = temp1;
 
-    // Preload Green Tree Python sequence
+    // Preload Green Tree Python sequence (Silent Background)
     for (let i = 1; i <= TOTAL_FRAMES_2; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
       img.src = `/snake22/ezgif-frame-${paddedIndex}.png`;
       img.onload = () => {
         if (typeof img.decode === "function") {
-          img.decode().then(triggerAssetLoaded).catch(triggerAssetLoaded);
-        } else {
-          triggerAssetLoaded();
+          img.decode().catch(triggerSilentLoad);
         }
       };
-      img.onerror = triggerAssetLoaded;
+      img.onerror = triggerSilentLoad;
       temp2.push(img);
     }
     images2Ref.current = temp2;
 
-    // Preload King Cobra sequence
+    // Preload King Cobra sequence (Silent Background)
     for (let i = 1; i <= TOTAL_FRAMES_3; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
       img.src = `/snake33/ezgif-frame-${paddedIndex}.png`;
       img.onload = () => {
         if (typeof img.decode === "function") {
-          img.decode().then(triggerAssetLoaded).catch(triggerAssetLoaded);
-        } else {
-          triggerAssetLoaded();
+          img.decode().catch(triggerSilentLoad);
         }
       };
-      img.onerror = triggerAssetLoaded;
+      img.onerror = triggerSilentLoad;
       temp3.push(img);
     }
     images3Ref.current = temp3;
@@ -329,7 +327,7 @@ export default function Page() {
     }
   });
 
-  const loadingPercentage = Math.round((imagesLoaded / COMBINED_FRAMES) * 100);
+  const loadingPercentage = Math.round((imagesLoaded / TOTAL_FRAMES_1) * 100);
 
   // Metadata specifications
   const metadata1: MetadataItem[] = [

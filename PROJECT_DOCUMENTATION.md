@@ -146,7 +146,7 @@ Animations are designed to feel like a high-end wildlife exhibition:
 
 ## 12. Scroll System
 The scroll system works via a virtual scroll track:
-- **Scroll Container**: A container of `700vh` height is created on the page (`350vh` per chapter).
+- **Scroll Container**: A container of `1050vh` height is created on the page (`350vh` per chapter).
 - **Sticky Viewport**: Inside the container, a `sticky-viewport` class with `position: fixed` locks the layout inside the screen.
 - **Frame Index Mapping**:
   - Chapter 1: Maps scroll progress `0.0` to `0.33` to frame indices `0` to `81`.

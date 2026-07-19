@@ -97,7 +97,7 @@ body {
 
 /* Scroll Container */
 .scroll-container {
-  height: 350vh; /* Scroll length for frame scrubbing */
+  height: 700vh; /* Scroll length for frame scrubbing (350vh per chapter) */
   position: relative;
   z-index: 1;
 }

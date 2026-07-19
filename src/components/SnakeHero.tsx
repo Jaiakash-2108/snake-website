@@ -10,13 +10,12 @@ export interface SnakeHeroProps {
   logoText?: string;
   eyebrow: string;
   eyebrowIcon?: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   description: string;
   metadata: MetadataItem[];
   ctaText?: string;
   backgroundColor?: string;
   textColor?: string;
-  borderColor?: string;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }
 
@@ -27,24 +26,11 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
   title,
   description,
   metadata,
-  ctaText = "Discover this species",
+  ctaText = "Discover Species",
   backgroundColor = "#ebb11c",
   textColor = "text-neutral-900",
-  borderColor = "border-neutral-900/30",
   canvasRef,
 }) => {
-  // Parse title into two lines naturally if it contains spaces
-  const titleWords = title.split(" ");
-  const displayTitle = titleWords.length > 1 ? (
-    <>
-      {titleWords[0]}
-      <br />
-      {titleWords.slice(1).join(" ")}
-    </>
-  ) : (
-    title
-  );
-
   return (
     <div 
       className={`relative w-screen h-screen overflow-hidden flex flex-col justify-between transition-colors duration-1000 ${textColor}`}
@@ -100,8 +86,8 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
           </div>
 
           {/* Heading */}
-          <h1 className="font-serif font-light tracking-tight leading-[0.95] text-[48px] sm:text-[68px] md:text-[80px] lg:text-[96px] uppercase select-none mb-6">
-            {displayTitle}
+          <h1 className="font-serif font-light tracking-tight leading-[0.95] text-[40px] sm:text-[56px] md:text-[68px] lg:text-[80px] uppercase select-none mb-6">
+            {title}
           </h1>
 
           {/* Divider */}
@@ -138,13 +124,16 @@ export const SnakeHero: React.FC<SnakeHeroProps> = ({
             ))}
           </div>
 
-          {/* CTA Link */}
-          <a 
-            href="#"
-            className="group relative font-sans font-semibold text-xs sm:text-sm tracking-wide flex items-center gap-2 pb-1 border-b border-current transition-all duration-300 hover:border-transparent cursor-pointer"
+          {/* CTA Button */}
+          <button 
+            className={`px-6 py-2.5 rounded-full border border-current text-xs font-sans font-semibold tracking-wider transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm ${
+              textColor.includes("text-white") 
+                ? "hover:bg-white hover:text-neutral-950" 
+                : "hover:bg-neutral-950 hover:text-white"
+            }`}
           >
-            {ctaText} <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </a>
+            {ctaText} <span className="text-[14px]">→</span>
+          </button>
 
         </main>
       </div>

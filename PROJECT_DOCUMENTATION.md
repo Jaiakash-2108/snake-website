@@ -151,7 +151,7 @@ The scroll system works via a virtual scroll track:
 - **Frame Index Mapping**:
   - Chapter 1: Maps scroll progress `0.0` to `0.33` to frame indices `0` to `81`.
   - Chapter 2: Maps scroll progress `0.33` to `0.66` to frame indices `0` to `117`.
-  - Chapter 3: Maps scroll progress `0.66` to `1.0` to frame indices `0` to `159`.
+  - Chapter 3: Maps scroll progress `0.66` to `1.0` to frame indices `0` to `199`.
 - **requestAnimationFrame**: Redraw calculations are queued in the browser's painting cycle to prevent render blocks.
 
 ---
@@ -190,7 +190,7 @@ Rather than manually modifying 118 PNG files, Chapter 2 dynamically reconstructs
 ## 17. Assets
 - **Reticulated Python Sequence**: 82 JPEGs stored inside `/public/Reticulated-python-1/`.
 - **Green Tree Python Sequence**: 118 PNGs stored inside `/public/snake22/`.
-- **King Cobra Sequence**: 160 JPEGs stored inside `/public/snake33/`.
+- **King Cobra Sequence**: 200 PNGs stored inside `/public/snake33/`.
 - **Icons**: Clean inline SVGs are preferred for the logo and venom properties to keep control over vector styles.
 
 ---
@@ -252,6 +252,6 @@ As of the current milestone, all foundational UI, canvas engineering, scroll phy
 The following chapters have been reviewed, approved, and are strictly frozen. **No further changes, modifications, or refactoring are permitted on these sections:**
 1. **Chapter 1: Reticulated Python** (Preloaded 82-frame JPEG sequence, golden theme)
 2. **Chapter 2: Green Tree Python** (Preloaded 118-frame PNG sequence, dark theme with dynamic watermark clone patcher)
-3. **Chapter 3: King Cobra** (Preloaded 160-frame JPEG sequence, dark forest theme)
+3. **Chapter 3: King Cobra** (Preloaded 200-frame PNG sequence, dark forest theme)
 
 Any future work on this project must strictly inherit from these finalized templates and design systems without altering the frozen code of Chapters 1, 2, and 3.

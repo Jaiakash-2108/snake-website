@@ -239,3 +239,16 @@ The design system guarantees the margins and typography remain aligned.
 
 ## 24. Project Summary
 The **Snake Atlas** successfully merges premium editorial aesthetics with clean, high-performance scroll engineering. By using canvas frame painting, GPU-accelerated CSS filters, scroll-synchronized opacity cross-fades, and a dynamic clone-stamp watermark patcher, it delivers an immersive wildlife exhibition where layout consistency and user interactions are polished to production-level standards.
+
+---
+
+## 25. Version Control & Section Freeze Status
+**Status:** 🔒 LOCKED (Production Ready)
+As of the current milestone, all foundational UI, canvas engineering, scroll physics, and design tokens have been finalized. 
+
+### Frozen Sections
+The following chapters have been reviewed, approved, and are strictly frozen. **No further changes, modifications, or refactoring are permitted on these sections:**
+1. **Chapter 1: Reticulated Python** (Preloaded 82-frame JPEG sequence, golden theme)
+2. **Chapter 2: Green Tree Python** (Preloaded 118-frame PNG sequence, dark theme with dynamic watermark clone patcher)
+
+Any future work on this project (e.g., Chapter 3) must strictly inherit from these finalized templates and design systems without altering the frozen code of Chapters 1 and 2.

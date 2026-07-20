@@ -8,7 +8,8 @@ import SnakeHero, { MetadataItem } from "@/components/SnakeHero";
 const TOTAL_FRAMES_1 = 82;
 const TOTAL_FRAMES_2 = 118;
 const TOTAL_FRAMES_3 = 200;
-const COMBINED_FRAMES = TOTAL_FRAMES_1 + TOTAL_FRAMES_2 + TOTAL_FRAMES_3;
+
+const INITIAL_VISIBLE_FRAMES = 15;
 
 export default function Page() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,6 +23,9 @@ export default function Page() {
   const images1Ref = useRef<HTMLImageElement[]>([]);
   const images2Ref = useRef<HTMLImageElement[]>([]);
   const images3Ref = useRef<HTMLImageElement[]>([]);
+
+  const chapter2PreloadTriggered = useRef(false);
+  const chapter3PreloadTriggered = useRef(false);
 
   // Tracking drawing states
   const lastRenderedIndex1Ref = useRef<number>(-1);
@@ -155,24 +159,20 @@ export default function Page() {
     }
   }, []);
 
-  // Preload all assets for all chapters
+  // Initial Page Load: Only process Chapter 1
   useEffect(() => {
     let chapter1Loaded = 0;
     const temp1: HTMLImageElement[] = [];
-    const temp2: HTMLImageElement[] = [];
-    const temp3: HTMLImageElement[] = [];
 
     const triggerChapter1Loaded = () => {
       chapter1Loaded++;
       setImagesLoaded(chapter1Loaded);
-      if (chapter1Loaded === TOTAL_FRAMES_1) {
+      // Fast path: Unblock UI after initial frames load, remaining Chapter 1 loads natively in bg
+      if (chapter1Loaded === INITIAL_VISIBLE_FRAMES) {
         setTimeout(() => setLoading(false), 450);
       }
     };
 
-    const triggerSilentLoad = () => {};
-
-    // Preload Reticulated Python sequence (Blocking)
     for (let i = 1; i <= TOTAL_FRAMES_1; i++) {
       const img = new Image();
       const paddedIndex = String(i).padStart(3, '0');
@@ -188,37 +188,61 @@ export default function Page() {
       temp1.push(img);
     }
     images1Ref.current = temp1;
-
-    // Preload Green Tree Python sequence (Silent Background)
-    for (let i = 1; i <= TOTAL_FRAMES_2; i++) {
-      const img = new Image();
-      const paddedIndex = String(i).padStart(3, '0');
-      img.src = `/snake22/ezgif-frame-${paddedIndex}.png`;
-      img.onload = () => {
-        if (typeof img.decode === "function") {
-          img.decode().catch(triggerSilentLoad);
-        }
-      };
-      img.onerror = triggerSilentLoad;
-      temp2.push(img);
-    }
-    images2Ref.current = temp2;
-
-    // Preload King Cobra sequence (Silent Background)
-    for (let i = 1; i <= TOTAL_FRAMES_3; i++) {
-      const img = new Image();
-      const paddedIndex = String(i).padStart(3, '0');
-      img.src = `/snake33/ezgif-frame-${paddedIndex}.png`;
-      img.onload = () => {
-        if (typeof img.decode === "function") {
-          img.decode().catch(triggerSilentLoad);
-        }
-      };
-      img.onerror = triggerSilentLoad;
-      temp3.push(img);
-    }
-    images3Ref.current = temp3;
   }, []);
+
+  // Scroll-Triggered Progressive Preloading (Chapters 2 & 3)
+  useEffect(() => {
+    const requestIdle = typeof window !== 'undefined' && window.requestIdleCallback 
+      ? window.requestIdleCallback 
+      : (cb: () => void) => setTimeout(cb, 1);
+    
+    const triggerSilentLoad = () => {};
+
+    const preloadChapter2 = () => {
+      if (chapter2PreloadTriggered.current) return;
+      chapter2PreloadTriggered.current = true;
+      requestIdle(() => {
+        const temp2: HTMLImageElement[] = [];
+        for (let i = 1; i <= TOTAL_FRAMES_2; i++) {
+          const img = new Image();
+          const paddedIndex = String(i).padStart(3, '0');
+          img.src = `/snake22/ezgif-frame-${paddedIndex}.png`;
+          img.onload = () => {
+            if (typeof img.decode === "function") img.decode().catch(triggerSilentLoad);
+          };
+          img.onerror = triggerSilentLoad;
+          temp2.push(img);
+        }
+        images2Ref.current = temp2;
+      });
+    };
+
+    const preloadChapter3 = () => {
+      if (chapter3PreloadTriggered.current) return;
+      chapter3PreloadTriggered.current = true;
+      requestIdle(() => {
+        const temp3: HTMLImageElement[] = [];
+        for (let i = 1; i <= TOTAL_FRAMES_3; i++) {
+          const img = new Image();
+          const paddedIndex = String(i).padStart(3, '0');
+          img.src = `/snake33/ezgif-frame-${paddedIndex}.png`;
+          img.onload = () => {
+            if (typeof img.decode === "function") img.decode().catch(triggerSilentLoad);
+          };
+          img.onerror = triggerSilentLoad;
+          temp3.push(img);
+        }
+        images3Ref.current = temp3;
+      });
+    };
+
+    const unsubscribe = smoothProgress.on("change", (latest) => {
+      if (latest >= 0.20) preloadChapter2();
+      if (latest >= 0.60) preloadChapter3();
+    });
+
+    return () => unsubscribe();
+  }, [smoothProgress]);
 
   // Handle canvases resize and redraw immediately
   useEffect(() => {
@@ -327,7 +351,7 @@ export default function Page() {
     }
   });
 
-  const loadingPercentage = Math.round((imagesLoaded / TOTAL_FRAMES_1) * 100);
+  const loadingPercentage = Math.min(100, Math.round((imagesLoaded / INITIAL_VISIBLE_FRAMES) * 100));
 
   // Metadata specifications
   const metadata1: MetadataItem[] = [

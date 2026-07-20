@@ -165,7 +165,10 @@ Drawing 200 high-resolution images in rapid succession using raw DOM `<img>` ele
 
 ## 14. Performance Optimizations
 - **GPU-Accelerated CSS Filters**: Removed the CPU-based `ctx.filter` from the rendering loop and offloaded it to the GPU compositor via inline CSS `style={{ filter: "contrast(1.15) brightness(1.05) saturate(1.12)" }}` directly on the `<canvas>` tag. This guarantees buttery-smooth **60 FPS** scroll scrubbing.
-- **Image Preloading & Decoding**: Images are instantiated and cached in `imagesRef`. We call `img.decode()` before hiding the loader, forcing the browser to decode and cache the JPEGs/PNGs in GPU memory.
+- **Progressive Preloading Engine**: To prevent locking the main thread with 400 simultaneous high-res HTTP requests, the engine employs a tiered loading architecture:
+  - **Fast Initial Load**: The preloader UI vanishes the instant the first `15` frames of Chapter 1 decode, allowing instant viewing.
+  - **Scroll-Triggered Fetches**: Chapter 2 and Chapter 3 sequences are completely detached from initial load and are fetched dynamically when the user hits 20% and 60% scroll depth.
+  - **`requestIdleCallback` Offloading**: Background fetches and decoding are wrapped in idle callbacks, ensuring the 60FPS scroll animations are never interrupted by network or CPU bottlenecks.
 - **State De-coupling**: Scroll updates do NOT write to React states (`useState`), avoiding rendering updates.
 
 ---

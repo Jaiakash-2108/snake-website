@@ -169,16 +169,13 @@ Drawing 200 high-resolution images in rapid succession using raw DOM `<img>` ele
   - **Fast Initial Load**: The preloader UI vanishes the instant the first `15` frames of Chapter 1 decode, allowing instant viewing.
   - **Scroll-Triggered Fetches**: Chapter 2 and Chapter 3 sequences are completely detached from initial load and are fetched dynamically when the user hits 20% and 60% scroll depth.
   - **`requestIdleCallback` Offloading**: Background fetches and decoding are wrapped in idle callbacks, ensuring the 60FPS scroll animations are never interrupted by network or CPU bottlenecks.
+- **Mathematical Coordinate Caching**: The heavy aspect-ratio calculations (`drawX`, `drawY`, `drawWidth`, `drawHeight`) are removed from the 60FPS draw loop and only compute once upon window resize, heavily reducing CPU strain.
+- **Adaptive Resolution Capping**: The canvas `devicePixelRatio` is firmly clamped at `1.5x` max to prevent 4K texture bloating on Retina displays. The `imageSmoothingQuality` dynamically downshifts to `"medium"` on dense displays to preserve GPU fillrate without visual loss.
 - **State De-coupling**: Scroll updates do NOT write to React states (`useState`), avoiding rendering updates.
 
 ---
 
-## 15. Watermark Removal (Canvas Clone Patcher)
-Rather than manually modifying 118 PNG files, Chapter 2 dynamically reconstructs the background texture to cover the Gemini watermark at runtime:
-- **Implementation**: After drawing the image frame onto Canvas 2, a clone operation copies a clean `70px * dpr` patch from the left (at the same height level under the branch) and draws it over the bottom-right corner where the logo sits.
-- **Result**: The watermark is completely hidden with **zero solid black blocks, crops, or blurs**. The branch and snake tail blend seamlessly.
 
----
 
 ## 16. Libraries Used
 
@@ -193,7 +190,7 @@ Rather than manually modifying 118 PNG files, Chapter 2 dynamically reconstructs
 ## 17. Assets
 - **Reticulated Python Sequence**: 82 JPEGs stored inside `/public/Reticulated-python-1/`.
 - **Green Tree Python Sequence**: 118 PNGs stored inside `/public/snake22/`.
-- **King Cobra Sequence**: 200 PNGs stored inside `/public/snake33/`.
+- **King Cobra Sequence**: 192 JPEGs stored inside `/public/snake33/`.
 - **Icons**: Clean inline SVGs are preferred for the logo and venom properties to keep control over vector styles.
 
 ---
@@ -243,7 +240,7 @@ The design system guarantees the margins and typography remain aligned.
 ---
 
 ## 24. Project Summary
-The **Snake Atlas** successfully merges premium editorial aesthetics with clean, high-performance scroll engineering. By using canvas frame painting, GPU-accelerated CSS filters, scroll-synchronized opacity cross-fades, and a dynamic clone-stamp watermark patcher, it delivers an immersive wildlife exhibition where layout consistency and user interactions are polished to production-level standards.
+The **Snake Atlas** successfully merges premium editorial aesthetics with clean, high-performance scroll engineering. By using canvas frame painting, GPU-accelerated CSS filters, scroll-synchronized opacity cross-fades, and heavily optimized tiered loading architectures, it delivers an immersive wildlife exhibition where layout consistency and user interactions are polished to production-level standards.
 
 ---
 
@@ -254,7 +251,7 @@ As of the current milestone, all foundational UI, canvas engineering, scroll phy
 ### Frozen Sections
 The following chapters have been reviewed, approved, and are strictly frozen. **No further changes, modifications, or refactoring are permitted on these sections:**
 1. **Chapter 1: Reticulated Python** (Preloaded 82-frame JPEG sequence, golden theme)
-2. **Chapter 2: Green Tree Python** (Preloaded 118-frame PNG sequence, dark theme with dynamic watermark clone patcher)
-3. **Chapter 3: King Cobra** (Preloaded 200-frame PNG sequence, dark forest theme)
+2. **Chapter 2: Green Tree Python** (Preloaded 118-frame PNG sequence, dark theme)
+3. **Chapter 3: King Cobra** (Preloaded 192-frame JPEG sequence, dark forest theme)
 
 Any future work on this project must strictly inherit from these finalized templates and design systems without altering the frozen code of Chapters 1, 2, and 3.

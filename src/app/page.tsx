@@ -32,6 +32,12 @@ export default function Page() {
   const lastRenderedIndex2Ref = useRef<number>(-1);
   const lastRenderedIndex3Ref = useRef<number>(-1);
 
+  // Cached Aspect Ratio Coordinates
+  type DrawCoords = { drawX: number; drawY: number; drawWidth: number; drawHeight: number };
+  const drawCoords1Ref = useRef<DrawCoords | null>(null);
+  const drawCoords2Ref = useRef<DrawCoords | null>(null);
+  const drawCoords3Ref = useRef<DrawCoords | null>(null);
+
   // requestAnimationFrame handle caches
   const animationFrameId1Ref = useRef<number | null>(null);
   const animationFrameId2Ref = useRef<number | null>(null);
@@ -78,7 +84,8 @@ export default function Page() {
   const drawImage = useCallback((
     canvasRef: React.RefObject<HTMLCanvasElement | null>,
     imagesList: HTMLImageElement[],
-    index: number
+    index: number,
+    coordsRef: React.MutableRefObject<DrawCoords | null>
   ) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -88,75 +95,45 @@ export default function Page() {
     const img = imagesList[index];
     if (!img || !img.complete) return;
 
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const imgWidth = img.width;
-    const imgHeight = img.height;
+    // Cache coords if invalidated or empty
+    if (!coordsRef.current) {
+      const canvasRatio = canvas.width / canvas.height;
+      const imgRatio = img.width / img.height;
+      let drawWidth = canvas.width;
+      let drawHeight = canvas.height;
+      let drawX = 0;
+      let drawY = 0;
 
-    const imgRatio = imgWidth / imgHeight;
-    const canvasRatio = canvasWidth / canvasHeight;
+      if (canvasRatio > imgRatio) {
+        drawHeight = canvas.width / imgRatio;
+        drawY = (canvas.height - drawHeight) / 2;
+      } else {
+        drawWidth = canvas.height * imgRatio;
+        drawX = (canvas.width - drawWidth) / 2;
+      }
 
-    let drawWidth = canvasWidth;
-    let drawHeight = canvasHeight;
-    let drawX = 0;
-    let drawY = 0;
+      if (drawWidth > canvas.width) {
+        drawX = canvas.width - drawWidth;
+      }
 
-    // Scale aspect-fill
-    if (canvasRatio > imgRatio) {
-      drawWidth = canvasWidth;
-      drawHeight = canvasWidth / imgRatio;
-      drawY = (canvasHeight - drawHeight) / 2;
-    } else {
-      drawHeight = canvasHeight;
-      drawWidth = canvasHeight * imgRatio;
-      drawX = (canvasWidth - drawWidth) / 2;
+      coordsRef.current = { drawX, drawY, drawWidth, drawHeight };
     }
 
-    // Anchor visual alignment to the right of the screen (matching layout composition)
-    if (drawWidth > canvasWidth) {
-      drawX = canvasWidth - drawWidth;
-    }
-
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Adaptive image smoothing based on actual device DPR
+    ctx.imageSmoothingEnabled = true;
+    const actualDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    ctx.imageSmoothingQuality = actualDpr <= 1.5 ? "high" : "medium";
 
-
+    const coords = coordsRef.current;
     ctx.drawImage(
       img, 
-      Math.round(drawX), 
-      Math.round(drawY), 
-      Math.round(drawWidth), 
-      Math.round(drawHeight)
+      Math.round(coords.drawX), 
+      Math.round(coords.drawY), 
+      Math.round(coords.drawWidth), 
+      Math.round(coords.drawHeight)
     );
-
-    // If this is Chapter 2 (Green Tree Python), dynamically clone-stamp the background to hide the Gemini watermark
-    if (canvasRef === canvasRef2) {
-      // Calculate absolute patch dimensions relative to image scale
-      const patchW = Math.round(drawWidth * 0.08);
-      const patchH = Math.round(drawHeight * 0.08);
-      
-      // Source patch is shifted left (safe clean space at the same height below the branch)
-      const srcX = Math.round(drawX + drawWidth - patchW * 2.5);
-      const srcY = Math.round(drawY + drawHeight - patchH - 10);
-      
-      // Destination patch covers the bottom-right watermark
-      const destX = Math.round(drawX + drawWidth - patchW - 10);
-      const destY = Math.round(drawY + drawHeight - patchH - 10);
-      
-      ctx.drawImage(
-        canvas, 
-        srcX, 
-        srcY, 
-        patchW, 
-        patchH, 
-        destX, 
-        destY, 
-        patchW, 
-        patchH
-      );
-    }
   }, []);
 
   // Initial Page Load: Only process Chapter 1
@@ -250,47 +227,48 @@ export default function Page() {
 
     const handleResize = () => {
       const currentScroll = smoothProgress.get();
+      const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
 
       // Handle Canvas 1 resizing
       const canvas1 = canvasRef1.current;
       if (canvas1) {
         const rect = canvas1.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
         canvas1.width = Math.round(rect.width * dpr);
         canvas1.height = Math.round(rect.height * dpr);
+        drawCoords1Ref.current = null; // Invalidate cache
 
         const progress1 = Math.min(1, Math.max(0, currentScroll * 3));
         const frameIndex1 = Math.max(0, Math.min(TOTAL_FRAMES_1 - 1, Math.floor(progress1 * TOTAL_FRAMES_1)));
         lastRenderedIndex1Ref.current = frameIndex1;
-        drawImage(canvasRef1, images1Ref.current, frameIndex1);
+        drawImage(canvasRef1, images1Ref.current, frameIndex1, drawCoords1Ref);
       }
 
       // Handle Canvas 2 resizing
       const canvas2 = canvasRef2.current;
       if (canvas2) {
         const rect = canvas2.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
         canvas2.width = Math.round(rect.width * dpr);
         canvas2.height = Math.round(rect.height * dpr);
+        drawCoords2Ref.current = null; // Invalidate cache
 
         const progress2 = Math.min(1, Math.max(0, (currentScroll - 0.3333) * 3));
         const frameIndex2 = Math.max(0, Math.min(TOTAL_FRAMES_2 - 1, Math.floor(progress2 * TOTAL_FRAMES_2)));
         lastRenderedIndex2Ref.current = frameIndex2;
-        drawImage(canvasRef2, images2Ref.current, frameIndex2);
+        drawImage(canvasRef2, images2Ref.current, frameIndex2, drawCoords2Ref);
       }
 
       // Handle Canvas 3 resizing
       const canvas3 = canvasRef3.current;
       if (canvas3) {
         const rect = canvas3.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
         canvas3.width = Math.round(rect.width * dpr);
         canvas3.height = Math.round(rect.height * dpr);
+        drawCoords3Ref.current = null; // Invalidate cache
 
         const progress3 = Math.min(1, Math.max(0, (currentScroll - 0.6666) * 3));
         const frameIndex3 = Math.max(0, Math.min(TOTAL_FRAMES_3 - 1, Math.floor(progress3 * TOTAL_FRAMES_3)));
         lastRenderedIndex3Ref.current = frameIndex3;
-        drawImage(canvasRef3, images3Ref.current, frameIndex3);
+        drawImage(canvasRef3, images3Ref.current, frameIndex3, drawCoords3Ref);
       }
     };
 
@@ -314,7 +292,7 @@ export default function Page() {
       }
 
       animationFrameId1Ref.current = requestAnimationFrame(() => {
-        drawImage(canvasRef1, images1Ref.current, frameIndex1);
+        drawImage(canvasRef1, images1Ref.current, frameIndex1, drawCoords1Ref);
       });
     }
 
@@ -330,7 +308,7 @@ export default function Page() {
       }
 
       animationFrameId2Ref.current = requestAnimationFrame(() => {
-        drawImage(canvasRef2, images2Ref.current, frameIndex2);
+        drawImage(canvasRef2, images2Ref.current, frameIndex2, drawCoords2Ref);
       });
     }
 
@@ -346,7 +324,7 @@ export default function Page() {
       }
 
       animationFrameId3Ref.current = requestAnimationFrame(() => {
-        drawImage(canvasRef3, images3Ref.current, frameIndex3);
+        drawImage(canvasRef3, images3Ref.current, frameIndex3, drawCoords3Ref);
       });
     }
   });

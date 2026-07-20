@@ -7,7 +7,7 @@ import SnakeHero, { MetadataItem } from "@/components/SnakeHero";
 
 const TOTAL_FRAMES_1 = 82;
 const TOTAL_FRAMES_2 = 118;
-const TOTAL_FRAMES_3 = 200;
+const TOTAL_FRAMES_3 = 192;
 
 const INITIAL_VISIBLE_FRAMES = 15;
 
@@ -202,7 +202,7 @@ export default function Page() {
         for (let i = 1; i <= TOTAL_FRAMES_3; i++) {
           const img = new Image();
           const paddedIndex = String(i).padStart(3, '0');
-          img.src = `/snake33/ezgif-frame-${paddedIndex}.png`;
+          img.src = `/snake33/ezgif-frame-${paddedIndex}.jpg`;
           img.onload = () => {
             if (typeof img.decode === "function") img.decode().catch(triggerSilentLoad);
           };

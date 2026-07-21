@@ -171,7 +171,8 @@ Drawing 200 high-resolution images in rapid succession using raw DOM `<img>` ele
   - **`requestIdleCallback` Offloading**: Background fetches and decoding are wrapped in idle callbacks, ensuring the 60FPS scroll animations are never interrupted by network or CPU bottlenecks.
 - **Mathematical Coordinate Caching**: The heavy aspect-ratio calculations (`drawX`, `drawY`, `drawWidth`, `drawHeight`) are removed from the 60FPS draw loop and only compute once upon window resize, heavily reducing CPU strain.
 - **Adaptive Resolution Capping**: The canvas `devicePixelRatio` is firmly clamped at `1.5x` max to prevent 4K texture bloating on Retina displays. The `imageSmoothingQuality` dynamically downshifts to `"medium"` on dense displays to preserve GPU fillrate without visual loss.
-- **State De-coupling**: Scroll updates do NOT write to React states (`useState`), avoiding rendering updates.
+- **State De-coupling**: Scroll updates do NOT write to React states (e.g. `useState`). Earlier state variables like `activeIdx` tracking chapters were completely removed and replaced with Framer Motion's `useTransform` mapped to `pointerEvents`. This ensures React **never** re-renders during a scroll interaction, avoiding layout thrashing.
+- **Hardware Acceleration (GPU Offloading)**: Layout thrashing was further eliminated by applying `will-change: opacity, transform` and `transform: translateZ(0)` inline styles to the animating layers, forcing the browser's GPU compositor to handle transparency blending instead of the CPU.
 
 ---
 

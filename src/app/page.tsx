@@ -45,7 +45,6 @@ export default function Page() {
 
   const [imagesLoaded, setImagesLoaded] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [activeIdx, setActiveIdx] = useState(0);
 
   // Scroll Progress Tracking over the 700vh container height
   const { scrollYProgress } = useScroll({
@@ -69,16 +68,10 @@ export default function Page() {
   // Chapter 3 fades in from 0.65 to 0.69
   const opacity3 = useTransform(smoothProgress, [0.65, 0.69], [0, 1]);
 
-  // Track active index based on scroll boundaries
-  useMotionValueEvent(smoothProgress, "change", (latest) => {
-    let nextIdx = 0;
-    if (latest >= 0.333 && latest < 0.666) nextIdx = 1;
-    else if (latest >= 0.666) nextIdx = 2;
-    
-    if (nextIdx !== activeIdx) {
-      setActiveIdx(nextIdx);
-    }
-  });
+  // Pointer Event toggles to prevent interacting with hidden layers
+  const pointerEvents1 = useTransform(smoothProgress, (latest) => latest < 0.333 ? "auto" : "none");
+  const pointerEvents2 = useTransform(smoothProgress, (latest) => latest >= 0.333 && latest < 0.666 ? "auto" : "none");
+  const pointerEvents3 = useTransform(smoothProgress, (latest) => latest >= 0.666 ? "auto" : "none");
 
   // Frame Draw logic with high performance subpixel canvas aspect-fill
   const drawImage = useCallback((
@@ -427,7 +420,9 @@ export default function Page() {
           <motion.div 
             style={{ 
               opacity: opacity1,
-              pointerEvents: activeIdx === 0 ? "auto" : "none"
+              pointerEvents: pointerEvents1,
+              willChange: "opacity, transform",
+              transform: "translateZ(0)"
             }} 
             className="absolute inset-0 w-full h-full"
           >
@@ -454,7 +449,9 @@ export default function Page() {
           <motion.div 
             style={{ 
               opacity: opacity2,
-              pointerEvents: activeIdx === 1 ? "auto" : "none"
+              pointerEvents: pointerEvents2,
+              willChange: "opacity, transform",
+              transform: "translateZ(0)"
             }} 
             className="absolute inset-0 w-full h-full"
           >
@@ -481,7 +478,9 @@ export default function Page() {
           <motion.div 
             style={{ 
               opacity: opacity3,
-              pointerEvents: activeIdx === 2 ? "auto" : "none"
+              pointerEvents: pointerEvents3,
+              willChange: "opacity, transform",
+              transform: "translateZ(0)"
             }} 
             className="absolute inset-0 w-full h-full"
           >
